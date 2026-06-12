@@ -26,6 +26,27 @@ jobs:
         run: |
           echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
 
+      - name: Extract tool versions from Dockerfile
+        run: |
+          RUST_TOOLCHAIN="$(sed -nE 's/^ARG RUST_TOOLCHAIN="?([^"]+)"?/\1/p' Dockerfile)"
+          DIOXUS_CLI_VERSION="$(sed -nE 's/^ARG DIOXUS_CLI_VERSION="?([^"]+)"?/\1/p' Dockerfile)"
+
+          if [ -z "$RUST_TOOLCHAIN" ]; then
+            echo "Could not determine RUST_TOOLCHAIN from Dockerfile" >&2
+            exit 1
+          fi
+
+          if [ -z "$DIOXUS_CLI_VERSION" ]; then
+            echo "Could not determine DIOXUS_CLI_VERSION from Dockerfile" >&2
+            exit 1
+          fi
+
+          echo "RUST_TOOLCHAIN=$RUST_TOOLCHAIN" >> "$GITHUB_ENV"
+          echo "DIOXUS_CLI_VERSION=$DIOXUS_CLI_VERSION" >> "$GITHUB_ENV"
+
+          echo "Detected Rust toolchain: $RUST_TOOLCHAIN"
+          echo "Detected Dioxus CLI version: $DIOXUS_CLI_VERSION"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -46,6 +67,8 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
             type=sha,prefix=sha-
+            type=raw,value=rust-${{ env.RUST_TOOLCHAIN }}-dx-${{ env.DIOXUS_CLI_VERSION }},enable=${{ github.event_name != 'pull_request' }}
+            type=ref,event=tag,suffix=-rust-${{ env.RUST_TOOLCHAIN }}-dx-${{ env.DIOXUS_CLI_VERSION }}
 
       - name: Build and optionally push
         uses: docker/build-push-action@v7
@@ -56,5 +79,10 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            RUST_TOOLCHAIN=${{ env.RUST_TOOLCHAIN }}
+            DIOXUS_CLI_VERSION=${{ env.DIOXUS_CLI_VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          provenance: false
+          sbom: false

@@ -5,7 +5,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG DEBIAN_FRONTEND=noninteractive
 
 ARG RUST_TOOLCHAIN="1.96"
-ARG DIOXUS_CLI_VERSION="0.7"
+ARG DIOXUS_CLI_VERSION="^0.7"
 
 # Install Rust globally into /opt/rust.
 # Do NOT set CARGO_HOME globally at runtime; users should get their own writable

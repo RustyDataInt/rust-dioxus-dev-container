@@ -62,7 +62,6 @@ RUN CARGO_HOME=/opt/rust/cargo \
     && CARGO_HOME=/opt/rust/cargo \
        RUSTUP_HOME=/opt/rust/rustup \
        cargo install dioxus-cli --version "${DIOXUS_CLI_VERSION}" --locked \
-    && rm -rf /opt/rust/cargo/registry /opt/rust/cargo/git \
     && chmod -R a+rX /opt/rust \
     && rustc --version \
     && cargo --version \
